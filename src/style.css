@@ -1,0 +1,30 @@
+.item {
+	border: 1px solid #ddd;
+	margin-top: 5px;
+	padding: 5px 10px;
+	border-radius: 5px;
+}
+
+.item-id {
+	font-size: 10px;
+}
+
+.parent-id {
+	font-size: 10px;
+	background-color: crimson;
+	color: white;
+	display: inline-block;
+	margin-top: 5px;
+	padding: 5px;
+	border-radius: 5px;
+}
+
+.child-id {
+	font-size: 10px;
+	background-color: tomato;
+	color: white;
+	display: inline-block;
+	margin-top: 5px;
+	padding: 5px;
+	border-radius: 5px;
+}
