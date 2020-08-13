@@ -1,13 +1,13 @@
-export const getAllChildren = (deps, items) => {
-  let children = [];
+export const getAllBlocking = (deps, items) => {
+  let blockingIDs = [];
   if (items.length === 0) return [];
   items.map(item => {
-    children = [
-      ...children,
-      ...deps[item].children,
-      ...getAllChildren(deps, deps[item].children)
+    blockingIDs = [
+      ...blockingIDs,
+      ...deps[item].blockingIDs,
+      ...getAllBlocking(deps, deps[item].blockingIDs)
     ];
   })
-  // Return children while also removing duplicates
-  return [...new Set(children)];
+  // Return blockingIDs while also removing duplicates
+  return [...new Set(blockingIDs)];
 }

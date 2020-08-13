@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getProjectData, getProjects } from './todoist_api_adapter';
-import { getAllChildren } from './utils';
+import { getAllBlocking } from './utils';
 import _ from 'lodash';
 import './style.css';
 
@@ -9,7 +9,7 @@ const { PROJECT_ID } = require('../.env.json');
 
 const useDependencies = () => {
 	const [selectedItem, setSelectedItem] = useState(null);
-	const [selectedItemChildren, setSelectedItemChildren] = useState([]);
+	const [selectedItemBlocking, setSelectedItemBlocking] = useState([]);
 	const [dependencies, setDependencies] = useState(
 		localStorage.getItem(`${PROJECT_ID}-dependencies`)
 			? JSON.parse(localStorage.getItem(`${PROJECT_ID}-dependencies`))
@@ -27,26 +27,26 @@ const useDependencies = () => {
 	const getDep = (itemID) => {
 		return (dependencies[itemID.toString()])
 			? dependencies[itemID.toString()]
-			: { level: 0, parent: null };
+			: { level: 0, waitingIDs: null,  };
 	}
 
-	const changeParent = () => {
+	const changeWaiting = () => {
 
 	}
 
-	const moveItem = (itemID, newParentID) => {
+	const moveItem = (itemID, newWaitingID) => {
 		const tempDeps = _.cloneDeep(dependencies);
 		const newItemObj = {
 			level: 0,
-			parents: [],
-			children: []
+			waitingIDs: [],
+			blockingIDs: []
 		};
 		if (!tempDeps[itemID]) tempDeps[itemID] = _.cloneDeep(newItemObj);
-		if (!tempDeps[newParentID]) tempDeps[newParentID] = _.cloneDeep(newItemObj);
-		tempDeps[newParentID].children.push(itemID);
+		if (!tempDeps[newWaitingID]) tempDeps[newWaitingID] = _.cloneDeep(newItemObj);
+		tempDeps[newWaitingID].blockingIDs.push(itemID);
 
-		tempDeps[itemID].parents.push(newParentID);
-		tempDeps[itemID].level = tempDeps[newParentID].level + 1;
+		tempDeps[itemID].waitingIDs.push(newWaitingID);
+		tempDeps[itemID].level = tempDeps[newWaitingID].level + 1;
 
 		setDependencies(tempDeps)
 	}
@@ -60,30 +60,30 @@ const useDependencies = () => {
 	}
 	const getDepsWithItemMovedToLevel = (deps, itemID, level) => {
 		const tempDeps = _.cloneDeep(deps);
-		const itemChildren = getAllChildren(tempDeps, [itemID]);
+		const itemBlocking = getAllBlocking(tempDeps, [itemID]);
 		const levelsMoved = level - tempDeps[itemID].level;
 		tempDeps[itemID].level += levelsMoved;
-		itemChildren.map(childID => tempDeps[childID].level += levelsMoved);
+		itemBlocking.map(blockingID => tempDeps[blockingID].level += levelsMoved);
 		return tempDeps;
 	}
-	const removeParent = (itemID, parentID) => {
+	const removeWaiting = (itemID, waitingID) => {
 		let tempDeps = _.cloneDeep(dependencies);
-		tempDeps[itemID].parents.splice(tempDeps[itemID].parents.indexOf(parentID), 1);
-		tempDeps[parentID].children.splice(tempDeps[parentID].children.indexOf(itemID), 1);
-		let deepestParentLevel = -1;
-		tempDeps[itemID].parents.map(itemParentId => {
-			if(tempDeps[itemParentId].level > deepestParentLevel){
-				deepestParentLevel = tempDeps[itemParentId].level
+		tempDeps[itemID].waitingIDs.splice(tempDeps[itemID].waitingIDs.indexOf(waitingID), 1);
+		tempDeps[waitingID].blockingIDs.splice(tempDeps[waitingID].blockingIDs.indexOf(itemID), 1);
+		let deepestWaitingLevel = -1;
+		tempDeps[itemID].waitingIDs.map(itemWaitingId => {
+			if(tempDeps[itemWaitingId].level > deepestWaitingLevel){
+				deepestWaitingLevel = tempDeps[itemWaitingId].level
 			}
 		});
-		tempDeps = getDepsWithItemMovedToLevel(tempDeps, itemID, deepestParentLevel + 1);
+		tempDeps = getDepsWithItemMovedToLevel(tempDeps, itemID, deepestWaitingLevel + 1);
 		setDependencies(tempDeps);
 	}
 
 	return {
 		getDep,
 		selectItem,
-		removeParent,
+		removeWaiting,
 		selectedItem,
 		dependencies
 	}
@@ -93,7 +93,7 @@ const App = () => {
 	const [projectData, setProjectData] = useState({
 		items: []
 	});
-	const { getDep, selectItem, removeParent, selectedItem, dependencies } = useDependencies();
+	const { getDep, selectItem, removeWaiting, selectedItem, dependencies } = useDependencies();
 	useEffect(() => {
 		getProjectData(PROJECT_ID, setProjectData)
 	}, [])
@@ -113,17 +113,17 @@ const App = () => {
 					{dependencies[item.id]
 						&& (
 							<div>
-								{dependencies[item.id].parents.map((parentID) => (
+								{dependencies[item.id].waitingIDs.map((waitingID) => (
 									<div
-										className="parent-id"
+										className="waiting-id"
 										onClick={(evt) => {
 											evt.preventDefault();
-											removeParent(item.id, parentID);
+											removeWaiting(item.id, waitingID);
 										}}>
-										{parentID}
+										{waitingID}
 									</div>
 								))}
-								{dependencies[item.id].children.map((childID) => <div className="child-id">{childID}</div>)}
+								{dependencies[item.id].blockingIDs.map((blockingID) => <div className="blocking-id">{blockingID}</div>)}
 							</div>
 						)}
 				</div>
