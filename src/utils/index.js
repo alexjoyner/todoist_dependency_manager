@@ -18,6 +18,9 @@ export const getDeepestWaitingLevel = (deps, itemID) => {
     if(deps[itemWaitingId].level > deepestWaitingLevel){
       deepestWaitingLevel = deps[itemWaitingId].level
     }
+    if(deepestWaitingLevel === -1){
+      deepestWaitingLevel = 0
+    }
   });
   return deepestWaitingLevel;
 }
