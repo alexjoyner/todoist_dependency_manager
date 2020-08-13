@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getProjectData, getProjects } from './todoist_api_adapter';
+import { getAllChildren } from './utils';
 import _ from 'lodash';
 import './style.css';
 
@@ -18,20 +19,6 @@ const useDependencies = () => {
 	useEffect(() => {
 		localStorage.setItem(`${PROJECT_ID}-dependencies`, JSON.stringify(dependencies));
 	}, [dependencies])
-
-	const getAllChildren = (deps, items) => {
-		let children = [];
-		if (items.length === 0) return [];
-		items.map(item => {
-			const nonDuplicateChildren = []; // TODO
-			children = [
-				...children,
-				...deps[item].children,
-				...getAllChildren(deps, deps[item].children)
-			];
-		})
-		return children;
-	}
 
 	// useEffect(() => {
 
@@ -73,13 +60,23 @@ const useDependencies = () => {
 	}
 	const getDepsWithItemMovedToLevel = (deps, itemID, level) => {
 		const tempDeps = _.cloneDeep(deps);
-
+		const itemChildren = getAllChildren(tempDeps, [itemID]);
+		const levelsMoved = level - tempDeps[itemID].level;
+		tempDeps[itemID].level += levelsMoved;
+		itemChildren.map(childID => tempDeps[childID].level += levelsMoved);
 		return tempDeps;
 	}
 	const removeParent = (itemID, parentID) => {
-		const tempDeps = _.cloneDeep(dependencies);
+		let tempDeps = _.cloneDeep(dependencies);
 		tempDeps[itemID].parents.splice(tempDeps[itemID].parents.indexOf(parentID), 1);
 		tempDeps[parentID].children.splice(tempDeps[parentID].children.indexOf(itemID), 1);
+		let deepestParentLevel = -1;
+		tempDeps[itemID].parents.map(itemParentId => {
+			if(tempDeps[itemParentId].level > deepestParentLevel){
+				deepestParentLevel = tempDeps[itemParentId].level
+			}
+		});
+		tempDeps = getDepsWithItemMovedToLevel(tempDeps, itemID, deepestParentLevel + 1);
 		setDependencies(tempDeps);
 	}
 
@@ -104,20 +101,25 @@ const App = () => {
 		return items.map((item => item.parent_id
 			? null
 			: (
-				<div className="item" key={item.id} onClick={() => selectItem(item.id)} style={{
+				<div className="item" key={item.id} style={{
 					marginLeft: `${getDep(item.id).level * 20}px`,
 					display: getDep(item.id).level === level ? 'block' : 'none',
 					backgroundColor: (selectedItem === item.id) ? '#eee' : '#fff'
 				}}>
-					<div className="item-id">{item.id}</div>
-					<div className="item-content">{item.content}</div>
+					<div onClick={() => selectItem(item.id)}>
+						<div className="item-id">{item.id}</div>
+						<div className="item-content">{item.content}</div>
+					</div>
 					{dependencies[item.id]
 						&& (
 							<div>
 								{dependencies[item.id].parents.map((parentID) => (
 									<div
 										className="parent-id"
-										onClick={() => removeParent(item.id, parentID)}>
+										onClick={(evt) => {
+											evt.preventDefault();
+											removeParent(item.id, parentID);
+										}}>
 										{parentID}
 									</div>
 								))}
