@@ -11,3 +11,13 @@ export const getAllBlocking = (deps, items) => {
   // Return blockingIDs while also removing duplicates
   return [...new Set(blockingIDs)];
 }
+
+export const getDeepestWaitingLevel = (deps, itemID) => {
+  let deepestWaitingLevel = -1;
+  deps[itemID].waitingIDs.map(itemWaitingId => {
+    if(deps[itemWaitingId].level > deepestWaitingLevel){
+      deepestWaitingLevel = deps[itemWaitingId].level
+    }
+  });
+  return deepestWaitingLevel;
+}

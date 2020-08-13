@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { getProjectData, getProjects } from './todoist_api_adapter';
-import { getAllBlocking } from './utils';
+import { getAllBlocking, getDeepestWaitingLevel } from './utils';
 import _ from 'lodash';
 import './style.css';
 
@@ -35,7 +35,7 @@ const useDependencies = () => {
 	}
 
 	const moveItem = (itemID, newWaitingID) => {
-		const tempDeps = _.cloneDeep(dependencies);
+		let tempDeps = _.cloneDeep(dependencies);
 		const newItemObj = {
 			level: 0,
 			waitingIDs: [],
@@ -46,7 +46,7 @@ const useDependencies = () => {
 		tempDeps[newWaitingID].blockingIDs.push(itemID);
 
 		tempDeps[itemID].waitingIDs.push(newWaitingID);
-		tempDeps[itemID].level = tempDeps[newWaitingID].level + 1;
+		tempDeps = getDepsWithItemMovedToLevel(tempDeps, itemID, getDeepestWaitingLevel(tempDeps, itemID)+ 1);
 
 		setDependencies(tempDeps)
 	}
@@ -54,7 +54,6 @@ const useDependencies = () => {
 	const selectItem = (itemID) => {
 		if (!selectedItem) return setSelectedItem(itemID);
 		if (selectedItem === itemID) return setSelectedItem(null);
-		console.log(`${itemID} now depends on ${selectedItem}`);
 		moveItem(selectedItem, itemID);
 		setSelectedItem(null);
 	}
@@ -70,12 +69,7 @@ const useDependencies = () => {
 		let tempDeps = _.cloneDeep(dependencies);
 		tempDeps[itemID].waitingIDs.splice(tempDeps[itemID].waitingIDs.indexOf(waitingID), 1);
 		tempDeps[waitingID].blockingIDs.splice(tempDeps[waitingID].blockingIDs.indexOf(itemID), 1);
-		let deepestWaitingLevel = -1;
-		tempDeps[itemID].waitingIDs.map(itemWaitingId => {
-			if(tempDeps[itemWaitingId].level > deepestWaitingLevel){
-				deepestWaitingLevel = tempDeps[itemWaitingId].level
-			}
-		});
+		let deepestWaitingLevel = getDeepestWaitingLevel(tempDeps, itemID)
 		tempDeps = getDepsWithItemMovedToLevel(tempDeps, itemID, deepestWaitingLevel + 1);
 		setDependencies(tempDeps);
 	}
