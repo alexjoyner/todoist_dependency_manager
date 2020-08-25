@@ -1,7 +1,28 @@
 .item-id {
 	font-size: 10px;
 }
+.item-label {
+	font-size: 10px;
+	background-color: rgb(201, 201, 201);
+	color: rgb(68, 68, 68);
+	display: inline-block;
+	margin-top: 5px;
+	padding: 2px;
+	border-radius: 5px;
 
+}
+.item-complete-btn {
+	font-size: 10px;
+	background-color: rgb(201, 201, 201);
+	color: rgb(68, 68, 68);
+	display: inline-block;
+	margin-top: 5px;
+	padding: 2px;
+	border-radius: 5px;
+}
+.item-complete-btn:hover {
+	background-color: rgb(208, 255, 190);
+}
 .waiting-id {
 	font-size: 10px;
 	background-color: rgb(255, 169, 71);

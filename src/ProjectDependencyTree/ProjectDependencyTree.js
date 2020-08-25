@@ -1,9 +1,11 @@
 import React, { useEffect } from "react";
-import { getProjectData } from '../todoist_api_adapter';
+import { getProjectData, completeItem } from '../todoist_api_adapter';
 import { useDependencies } from './hooks/useDependencies';
+import { useLabels } from './hooks/useLabels'; 
 import './style.css';
 
 export const ProjectDependencyTree = ({ PROJECT_ID }) => {
+	const [labels, labelsLoading] = useLabels();
 	const {
 		getDep,
 		selectItem,
@@ -14,8 +16,11 @@ export const ProjectDependencyTree = ({ PROJECT_ID }) => {
 		projectData,
 		setProjectData
 	} = useDependencies({ PROJECT_ID });
+	const fetchProject = () => {
+		getProjectData(PROJECT_ID, setProjectData);
+	}
 	useEffect(() => {
-		getProjectData(PROJECT_ID, setProjectData)
+		fetchProject();
 	}, [])
 	const renderItems = (items, level) => {
 		return items.map((item => item.parent_id
@@ -26,9 +31,22 @@ export const ProjectDependencyTree = ({ PROJECT_ID }) => {
 					display: getDep(item.id).level === level ? 'block' : 'none',
 					backgroundColor: (selectedItem === item.id) ? '#eee' : '#fff'
 				}}>
+					<div className="item-complete-btn" onClick={async (evt) => {
+						evt.preventDefault();
+						await completeItem(item.id);
+						fetchProject();
+					}}>Complete</div>
 					<div onClick={() => selectItem(item.id)}>
 						<div className="item-id">{item.id}</div>
-						<div className="item-content">{item.content}</div>
+						<div className="item-content">{item.content}
+						</div>
+						<div>
+							{item.labels.map(labelId => {
+								const label = labels.find(label => label.id === labelId);
+								if(!label) return null;
+								return <div className="item-label">{label.name}</div>
+							})}
+						</div>
 					</div>
 					{dependencies[item.id]
 						&& (
@@ -49,6 +67,7 @@ export const ProjectDependencyTree = ({ PROJECT_ID }) => {
 				</div>
 			)))
 	}
+	if(labelsLoading) return <h1>Loading...</h1>
 	return (
 		<div>
 			<h1>Project Tasks</h1>
