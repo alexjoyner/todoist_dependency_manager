@@ -1,0 +1,12 @@
+.item {
+	border: 1px solid #ddd;
+	margin-top: 5px;
+	padding: 5px 10px;
+	border-radius: 5px;
+}
+.removeSelectedProject{
+	position: fixed;
+	right: 0;
+	top: 0;
+	margin: 20px;
+}

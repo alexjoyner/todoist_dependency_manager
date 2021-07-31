@@ -1,0 +1,41 @@
+{
+	"name": "depender",
+	"version": "0.1.0",
+	"description": "Gantt for GTD workflows",
+	"repository": "https://github.com/alexjoyner/depender.git",
+	"homepage": "http://alexjoyner.github.io/",
+	"author": "Alex Joyner <alex@voicir.com>",
+	"private": true,
+	"scripts": {
+		"start": "parcel index.html --out-dir docs",
+		"build": "rm -rf ./docs && parcel build index.html --out-dir docs",
+		"test:watch": "jest --watch --no-cache",
+		"test": "jest",
+		"coverage": "jest --coverage && .\\coverage\\lcov-report\\index.html",
+		"type-check": "tsc --noEmit"
+	},
+	"license": "MIT",
+	"dependencies": {
+		"react": "^16.13.1",
+		"react-dom": "^16.13.1",
+		"lodash": "4.17.19"
+	},
+	"devDependencies": {
+		"@types/jest": "^25.2.1",
+		"@types/react": "^16.9.34",
+		"@types/react-dom": "^16.9.7",
+		"babel-preset-nano-react-app": "^0.1.0",
+		"@testing-library/jest-dom": "^5.7.0",
+		"@testing-library/react": "^10.0.4",
+		"parcel": "^1.12.4",
+		"@babel/core": "^7.9.6",
+		"jest": "^26.0.1",
+		"ts-jest": "^25.4.0",
+		"typescript": "^3.8.3"
+	},
+	"babel": {
+		"presets": [
+			"babel-preset-nano-react-app"
+		]
+	}
+}
